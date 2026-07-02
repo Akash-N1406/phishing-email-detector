@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (raw/processed datasets are often large / not meant for git)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Kaggle credentials - NEVER commit this
+kaggle.json
+.kaggle/
+
+# Models (can be large binary files)
+models/*.pkl
+models/*.h5
+models/*.keras
+!models/.gitkeep
+
+# OS / editor
+.DS_Store
+.vscode/
+*.swp
+
+# Env vars
+.env
