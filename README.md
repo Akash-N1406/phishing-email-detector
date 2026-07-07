@@ -12,7 +12,23 @@ extraction, model training, and evaluation.
 
 ## Project Status
 
-🚧 In progress — Week 1 of 3 (Data & Feature Engineering)
+🚧 In progress — Week 2 of 3 (Model Training & Comparison)
+
+Completed:
+- Day 1: Repo scaffold + GitHub setup
+- Day 2: Data cleaning + metadata feature extraction
+- Day 3: TF-IDF + metadata feature engineering, train/test split
+- Day 4: Logistic Regression baseline (96.78% acc, 95.97% F1)
+- Day 5: Naive Bayes on TF-IDF (95.87% acc, 94.75% F1)
+
+Pending for Week 3:
+- Consolidated `notebooks/phishing_detection_walkthrough.ipynb` — walks through
+  the full pipeline (data → cleaning → features → each model → comparison →
+  conclusion) by importing the existing `src/` modules rather than duplicating
+  logic. This is the "Python notebook with complete code and documentation"
+  deliverable from the original brief.
+- Comparative analysis report
+- Presentation slides
 
 ## Stack
 

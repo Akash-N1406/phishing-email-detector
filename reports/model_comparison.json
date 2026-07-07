@@ -1,0 +1,30 @@
+{
+  "Logistic Regression": {
+    "model": "Logistic Regression",
+    "accuracy": 0.9678,
+    "precision": 0.9426,
+    "recall": 0.9774,
+    "f1": 0.9597
+  },
+  "Naive Bayes": {
+    "model": "Naive Bayes",
+    "accuracy": 0.9587,
+    "precision": 0.9449,
+    "recall": 0.9501,
+    "f1": 0.9475
+  },
+  "Random Forest": {
+    "model": "Random Forest",
+    "accuracy": 0.9581,
+    "precision": 0.9133,
+    "recall": 0.987,
+    "f1": 0.9487
+  },
+  "Neural Network": {
+    "model": "Neural Network",
+    "accuracy": 0.9718,
+    "precision": 0.9484,
+    "recall": 0.9815,
+    "f1": 0.9647
+  }
+}
