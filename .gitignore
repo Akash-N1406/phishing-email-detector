@@ -21,11 +21,9 @@ data/processed/*
 kaggle.json
 .kaggle/
 
-# Models (can be large binary files)
-models/*.pkl
-models/*.h5
-models/*.keras
-!models/.gitkeep
+# Models: committed intentionally so the repo is clone-and-run for the
+# Week 3 Django demo, without needing to retrain from scratch.
+# (If repo size becomes a concern later, revisit this.)
 
 # OS / editor
 .DS_Store
