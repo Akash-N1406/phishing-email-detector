@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phishing Email Detector</title>
+<style>
+  :root {
+    --navy-dark: #0D1321;
+    --navy-panel: #1B2436;
+    --offwhite: #F4F4F2;
+    --muted: #A9B4C2;
+    --alert: #E4572E;
+    --trust-blue: #3E92CC;
+    --safe-green: #5FA777;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--navy-dark);
+    color: var(--offwhite);
+    font-family: -apple-system, "Segoe UI", Calibri, Arial, sans-serif;
+    margin: 0;
+    padding: 2.5rem 1.5rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 {
+    font-family: Cambria, Georgia, serif;
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    background: var(--navy-panel);
+    color: var(--offwhite);
+    border: 1px solid #2A3450;
+    border-radius: 10px;
+    padding: 1rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--trust-blue); border-color: transparent; }
+  button {
+    margin-top: 1rem;
+    background: var(--alert);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+  .error { color: var(--alert); margin-top: 1rem; }
+
+  .result {
+    margin-top: 2rem;
+    background: var(--navy-panel);
+    border-radius: 12px;
+    padding: 1.75rem;
+  }
+  .verdict {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .badge {
+    font-family: Cambria, Georgia, serif;
+    font-weight: bold;
+    font-size: 1.4rem;
+    padding: 0.4rem 1.1rem;
+    border-radius: 8px;
+  }
+  .badge.phishing { background: #2A1A1A; color: var(--alert); }
+  .badge.safe { background: #16241A; color: var(--safe-green); }
+
+  .bar-row { margin: 0.4rem 0; font-size: 0.85rem; color: var(--muted); }
+  .bar-track {
+    background: #0D1321;
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+  }
+  .bar-fill { height: 100%; border-radius: 6px; }
+  .bar-fill.phishing { background: var(--alert); }
+  .bar-fill.safe { background: var(--safe-green); }
+
+  .section-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 1.5rem 0 0.6rem;
+  }
+  .words { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .word-chip {
+    font-family: Cambria, Georgia, serif;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+  }
+  .word-chip.pos { background: #2A1A1A; color: var(--alert); }
+  .word-chip.neg { background: #16241A; color: var(--safe-green); }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+  .meta-cell {
+    background: var(--navy-dark);
+    border-radius: 8px;
+    padding: 0.6rem;
+    text-align: center;
+  }
+  .meta-cell .val { font-family: Cambria, Georgia, serif; font-weight: bold; font-size: 1.1rem; color: var(--trust-blue); }
+  .meta-cell .lbl { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; }
+
+  .disclaimer {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Phishing Email Detector</h1>
+  <p class="subtitle">Paste an email below. Classified using a Logistic Regression model trained on TF-IDF text features + structural metadata.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="email_text" placeholder="Paste email text here...">{{ email_text|default:"" }}</textarea>
+    <br>
+    <button type="submit">Classify Email</button>
+  </form>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
+  {% if result %}
+    <div class="result">
+      <div class="verdict">
+        <span class="badge {% if result.label == 'Phishing' %}phishing{% else %}safe{% endif %}">
+          {{ result.label }}
+        </span>
+        <span style="color: var(--muted); font-size: 0.9rem;">
+          {{ result.phishing_probability }}% phishing confidence
+        </span>
+      </div>
+
+      <div class="bar-row">
+        Phishing — {{ result.phishing_probability }}%
+        <div class="bar-track"><div class="bar-fill phishing" style="width: {{ result.phishing_probability }}%;"></div></div>
+      </div>
+      <div class="bar-row">
+        Safe — {{ result.safe_probability }}%
+        <div class="bar-track"><div class="bar-fill safe" style="width: {{ result.safe_probability }}%;"></div></div>
+      </div>
+
+      {% if result.top_contributions %}
+        <div class="section-label">Words that influenced this prediction</div>
+        <div class="words">
+          {% for word, coef in result.top_contributions %}
+            <span class="word-chip {% if coef > 0 %}pos{% else %}neg{% endif %}">{{ word }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="section-label">Structural signals detected</div>
+      <div class="meta-grid">
+        <div class="meta-cell"><div class="val">{{ result.metadata.url_count }}</div><div class="lbl">URLs</div></div>
+        <div class="meta-cell"><div class="val">{{ result.metadata.exclamation_count }}</div><div class="lbl">Exclamations</div></div>
+        <div class="meta-cell"><div class="val">{{ result.metadata.word_count }}</div><div class="lbl">Words</div></div>
+        <div class="meta-cell"><div class="val">{{ result.metadata.caps_ratio|floatformat:2 }}</div><div class="lbl">Caps ratio</div></div>
+      </div>
+    </div>
+  {% endif %}
+
+  <p class="disclaimer">
+    Demo model trained on the Kaggle Phishing Email Detection dataset (Enron corpus + known phishing samples).
+    Predictions reflect patterns in that dataset and may not generalize to all email sources — see the project's
+    <code>reports/limitations.md</code> for known caveats. Not a substitute for a production email security system.
+  </p>
+</div>
+</body>
+</html>
