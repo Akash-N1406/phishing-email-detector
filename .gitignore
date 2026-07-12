@@ -32,3 +32,8 @@ kaggle.json
 
 # Env vars
 .env
+
+# Django (webapp/)
+webapp/db.sqlite3
+webapp/staticfiles/
+webapp/*.log

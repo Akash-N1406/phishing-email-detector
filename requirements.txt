@@ -22,9 +22,8 @@ ipykernel>=6.25.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
-# Optional: deployment (Week 3)
-flask>=3.0.0
-streamlit>=1.30.0
+# Deployment: Django demo (webapp/)
+django>=5.0.0
 
 # Kaggle dataset download
 kaggle>=1.6.0

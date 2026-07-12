@@ -1,55 +1,68 @@
 # AI-Driven Phishing Email Detection Using NLP
 
 Machine-learning system that detects phishing emails using text analysis and metadata
-features. Built from scratch: data preprocessing, feature extraction, model training,
-and evaluation across four classifier families.
+features, built from scratch: data preprocessing, feature extraction, model training,
+evaluation across four classifier families, and a live web demo.
 
-## Objective
-
-To design and implement a machine-learning system that automatically detects phishing
-emails using text analysis and metadata features, applying data preprocessing, feature
-extraction, model training, and evaluation.
+**Internship project — Indian Institute of Computing and Technology (IICT)**
 
 ## Project Status
 
-🚧 In progress — Week 2 of 3 (Model Training & Comparison)
+✅ Complete — all deliverables from the project brief have been built.
 
-Completed:
-- Day 1: Repo scaffold + GitHub setup
-- Day 2: Data cleaning + metadata feature extraction
-- Day 3: TF-IDF + metadata feature engineering, train/test split
-- Day 4: Logistic Regression baseline (96.78% acc, 95.97% F1)
-- Day 5: Naive Bayes on TF-IDF (95.87% acc, 94.75% F1)
+## Results Summary
 
-Pending for Week 3:
-- Consolidated `notebooks/phishing_detection_walkthrough.ipynb` — walks through
-  the full pipeline (data → cleaning → features → each model → comparison →
-  conclusion) by importing the existing `src/` modules rather than duplicating
-  logic. This is the "Python notebook with complete code and documentation"
-  deliverable from the original brief.
-- Comparative analysis report
-- Presentation slides
+Four classifiers trained and evaluated on the same held-out test set (3,726 emails):
+
+| Model | Accuracy | Precision | Recall | F1 |
+|---|---|---|---|---|
+| **Neural Network** | **97.18%** | 94.84% | 98.15% | **96.47%** |
+| Logistic Regression | 96.78% | 94.26% | 97.74% | 95.97% |
+| Naive Bayes | 95.87% | 94.49% | 95.01% | 94.75% |
+| Random Forest | 95.81% | 91.33% | **98.70%** | 94.87% |
+
+- **Neural Network** — best overall performance.
+- **Logistic Regression** — best interpretability (fully explainable coefficients), within 0.4 points of the NN.
+- **Random Forest** — highest recall, catches the most phishing emails at the cost of more false alarms.
+- **Naive Bayes** — trained on text alone (no metadata) and still lands within ~1 point of Logistic Regression.
+
+Full analysis, feature importance, and error analysis: [`reports/limitations.md`](reports/limitations.md) and [`reports/Phishing_Detection_Comparative_Analysis_Report.docx`](reports/).
 
 ## Stack
 
 - **Language:** Python 3.10+
 - **ML:** scikit-learn (Logistic Regression, Random Forest, Naive Bayes), TensorFlow/Keras (Neural Network)
-- **NLP:** NLTK, spaCy, TF-IDF
-- **Data:** pandas, numpy
+- **NLP:** NLTK, TF-IDF
+- **Data:** pandas, numpy, scipy (sparse matrices)
 - **Viz:** matplotlib, seaborn
-- **Deployment (optional):** Flask / Streamlit
+- **Web demo:** Django
 
 ## Project Structure
 
 ```
 phishing-email-detector/
 ├── data/
-│   ├── raw/            # original, untouched datasets
-│   └── processed/      # cleaned/feature-engineered data
-├── notebooks/           # exploratory analysis
-├── src/                  # reusable scripts (cleaning, features, training, eval)
-├── models/               # saved trained models
-├── reports/              # comparative analysis, figures, slides
+│   ├── raw/                 # original Kaggle dataset
+│   └── processed/           # cleaned data + train/test feature matrices
+├── notebooks/
+│   └── phishing_detection_walkthrough.ipynb   # end-to-end presentation notebook
+├── src/                      # the actual pipeline, run in order:
+│   ├── 01_explore_data.py
+│   ├── 02_clean_data.py
+│   ├── 03_feature_engineering.py
+│   ├── 04_train_logistic_regression.py
+│   ├── 05_train_naive_bayes.py
+│   ├── 06_train_random_forest.py
+│   ├── 07_train_neural_network.py
+│   ├── 08_feature_importance_error_analysis.py
+│   └── eval_utils.py         # shared evaluation/plotting utilities
+├── webapp/                    # Django live-demo (see below)
+├── models/                    # trained model artifacts (committed for clone-and-run)
+├── reports/
+│   ├── figures/               # confusion matrices, feature importance plots
+│   ├── model_comparison.json  # machine-readable results, updated by each training script
+│   ├── limitations.md         # documented findings & known limitations
+│   └── Phishing_Detection_Comparative_Analysis_Report.docx
 ├── requirements.txt
 └── README.md
 ```
@@ -58,41 +71,93 @@ phishing-email-detector/
 
 | Phase | Description |
 |---|---|
-| Data Collection | Gather phishing and legitimate email samples (Kaggle). |
-| Data Cleaning | Remove HTML tags, punctuation, and stopwords. |
-| Feature Engineering | Apply TF-IDF, word embeddings, and metadata extraction. |
-| Model Development | Train multiple classifiers and tune hyperparameters. |
-| Evaluation | Compare models and interpret results. |
-| Deployment (Optional) | Simple web interface for live email classification. |
+| Data Collection | Kaggle "Phishing Email Detection" dataset (18,650 emails, Enron corpus + known phishing samples). |
+| Data Cleaning | HTML stripping, lowercasing, punctuation/stopword removal; outlier-length rows capped. |
+| Metadata Extraction | 7 structural features (URL count, caps ratio, exclamation count, etc.) extracted from raw text before cleaning destroys those signals. |
+| Feature Engineering | TF-IDF (5,000 features, unigrams+bigrams) combined with scaled metadata into a 5,007-dim matrix. Train/test split performed *before* fitting, to avoid data leakage. |
+| Model Development | 4 classifiers trained: Logistic Regression, Random Forest, Naive Bayes (TF-IDF only — non-negativity requirement), Neural Network (Keras). |
+| Evaluation | Accuracy, precision, recall, F1, confusion matrices for every model. |
+| Analysis | Feature importance (LR coefficients, RF importances) + error analysis on misclassifications. |
+| Deployment | Django web demo for live email classification. |
 
-## Dataset
-
-- Primary: [Phishing Email Detection (Cyber Cop, Kaggle)](https://www.kaggle.com/datasets/cyber-cop/phishing-email-detection)
-- Robustness check (Week 3): synthetic LLM-generated phishing samples for generalization testing
-
-## Setup
+## Setup: ML Pipeline
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+python -m nltk.downloader stopwords
+
+kaggle datasets download -d cyber-cop/phishing-email-detection -p data/raw
+cd data/raw && unzip *.zip && cd ../..
+
+# Run the pipeline in order:
+python src/01_explore_data.py
+python src/02_clean_data.py
+python src/03_feature_engineering.py
+python src/04_train_logistic_regression.py
+python src/05_train_naive_bayes.py
+python src/06_train_random_forest.py
+python src/07_train_neural_network.py
+python src/08_feature_importance_error_analysis.py
 ```
 
-## Results
+Each training script prints metrics, saves a confusion matrix to `reports/figures/`,
+saves the trained model to `models/`, and appends its results to
+`reports/model_comparison.json`.
 
-_To be filled in as models are trained (Week 2)._
+## Setup: Notebook Walkthrough
 
-| Model | Accuracy | Precision | Recall | F1 |
-|---|---|---|---|---|
-| Logistic Regression | | | | |
-| Random Forest | | | | |
-| Naive Bayes | | | | |
-| Neural Network | | | | |
+```bash
+jupyter notebook notebooks/phishing_detection_walkthrough.ipynb
+```
+
+Presents the full pipeline end-to-end (data → cleaning → features → all 4 models →
+comparison → feature importance → error analysis → conclusion) by importing the
+real `src/` modules rather than duplicating logic — this notebook is a presentation
+layer over the actual pipeline, not a separate copy of it.
+
+## Setup: Live Web Demo (Django)
+
+Requires the ML pipeline to have been run at least once (needs `models/*.joblib`).
+
+```bash
+cd webapp
+python manage.py runserver
+```
+
+Open `http://127.0.0.1:8000/`, paste in email text, and get a classification with
+confidence scores, the specific words that influenced the prediction, and detected
+structural signals (URL count, exclamation count, etc.).
+
+Serves the Logistic Regression model (fast startup, fully interpretable) rather than
+the higher-accuracy Neural Network, since responsiveness matters more than the ~0.4
+point accuracy gap for a live demo. See `webapp/detector/ml.py` to swap models.
+
+**Scope note:** intentionally a single view, no database, no auth — this is a
+focused prediction demo, not a full application. See `reports/limitations.md` for
+the reasoning behind this and other design choices.
+
+## Key Findings
+
+- Phishing-indicative language matches the project brief's hypothesis directly:
+  `click`, `remove`, `free`, `money`, `site` — classic urgency/sales/call-to-action terms.
+- Engineered metadata features (`exclamation_count`, `caps_ratio`) rank among the most
+  predictive features overall, on par with top TF-IDF words.
+- The Neural Network's false negatives cluster around **content obfuscation** —
+  phishing emails padded with unrelated text to dodge keyword-based detection — a
+  structural blind spot of TF-IDF-based models that context-aware embeddings
+  (transformers) could address.
+- The "safe" class is shaped by this dataset's specific source (Enron corporate +
+  academic email); generalization to other email sources is a documented caveat,
+  not an assumption.
+
+Full discussion: [`reports/limitations.md`](reports/limitations.md).
 
 ## Learning Outcomes
 
 - How NLP supports cybersecurity threat detection
-- Hands-on text classification and model evaluation
-- Ethical AI practices for digital threat detection
+- Hands-on text classification and model evaluation across multiple algorithm families
+- Data leakage prevention in feature engineering pipelines
+- Reusable, DRY pipeline design (shared modules across scripts, notebook, and web demo)
+- Ethical AI practices: documenting limitations and generalization boundaries rather than overstating results
